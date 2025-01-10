@@ -1,29 +1,16 @@
 const { Server } = require("socket.io");
-const express = require("express");
-const http = require("http");
 
-const app = express();
-const port = 8000 || 3001;
+const port = 8000 || 3001
 
-const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: "*", // Update this to your frontend URL in production
-  },
+const io = new Server(8000, {
+  cors: true,
 });
 
 const emailToSocketIdMap = new Map();
 const socketidToEmailMap = new Map();
 
-// Testing route
-app.get("/msg", (req, res) => {
-  res.send("Server is running and WebRTC signaling server is live!");
-});
-
-// WebRTC Socket.IO functionality
 io.on("connection", (socket) => {
   console.log(`Socket Connected`, socket.id);
-
   socket.on("room:join", (data) => {
     const { email, room } = data;
     emailToSocketIdMap.set(email, socket.id);
@@ -34,7 +21,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("user:call", ({ to, offer }) => {
-    io.to(to).emit("incoming:call", { from: socket.id, offer });
+    io.to(to).emit("incomming:call", { from: socket.id, offer });
   });
 
   socket.on("call:accepted", ({ to, ans }) => {
@@ -50,8 +37,4 @@ io.on("connection", (socket) => {
     console.log("peer:nego:done", ans);
     io.to(to).emit("peer:nego:final", { from: socket.id, ans });
   });
-});
-
-server.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
 });
